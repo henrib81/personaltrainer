@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { AgGridReact } from 'ag-grid-react';
+import Snackbar from '@material-ui/core/Snackbar';
+import IconButton from '@material-ui/core/IconButton';
+import DeleteIcon from '@material-ui/icons/Delete';
 
 
 
@@ -13,6 +16,16 @@ function Trainings() {
         customer: ''
     }]);
     
+    const [open, setOpen] = useState(false);
+
+    const openSnackbar = () => {
+        setOpen(true);
+    }
+
+    const closeSnackbar = () => {
+        setOpen(false);
+    }
+    
 
     useEffect(() => {
         fetchTrainings()
@@ -25,21 +38,45 @@ function Trainings() {
         .catch(err => console.error(err))
     }
 
-   
+    const deleteTraining = (params) => {
+        if (window.confirm('Are you sure?')){
+        fetch(params, { 
+        method: 'DELETE'})
+        .then(response => {
+         if (response.ok) {
+            openSnackbar();
+            fetchTrainings();
+         }
+          else {
+            alert('Try again!');
+          }
+        })
+        .catch(err => console.error(err));
+      }
+      }
 
     const columns = [
-        { headerName: "Id", field: 'id', sortable: true, filter: true},
+        { headerName: "Id", field: 'id', sortable: true, filter: true, width: 100},
         { headerName: "Date", field: 'date', sortable: true, filter: true, resizable: true},
         { headerName: "Duration(in minutes)", field: 'duration', sortable: true, filter: true},
         { headerName: "Activity", field: 'activity', sortable: true, filter: true},
-        { headerName: "Customer id", field: 'customer.id', sortable: true, filter: true},
+        { headerName: "Customer id", field: 'customer.id', sortable: true, filter: true, width: 100},
         { headerName: "Firstname", field: 'customer.firstname', sortable: true, filter: true},
-        { headerName: "Lastname", field: 'customer.lastname', sortable: true, filter: true}
+        { headerName: "Lastname", field: 'customer.lastname', sortable: true, filter: true},
+        { headerName: 'Delete', 
+          field: 'links.0.href',
+          width: 100,
+          cellRendererFramework: params =>
+            <IconButton onClick={ () => deleteTraining(params.value)}>
+                <DeleteIcon />
+            </IconButton>
+        },
 
     ]
 
     return(
-        <div className="ag-theme-material" style={{ height: 600, width: '90%', margin: 'auto', textAlign: 'left'}}>
+        <div>
+        <div className="ag-theme-material" style={{ height: 600, width: '100%', margin: 'auto', textAlign: 'left'}}>
         <AgGridReact
             rowData={trainings}
             columnDefs={columns}
@@ -47,10 +84,15 @@ function Trainings() {
             pagination={true}
             paginationPageSize={8}
             suppressCellSelection={true}
-    
+            autoSizeAllColumns={true}
+        />        
+        </div>
+        <Snackbar
+            open={open}
+            message="done!"
+            autoHideDuration={3000}
+            onClose={closeSnackbar}  
         />
-
-        
         </div>
     );
 }
